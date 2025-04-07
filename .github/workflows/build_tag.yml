@@ -1,0 +1,98 @@
+name: Build C Project
+
+on:
+  push:
+    tags: v*  # Se déclenche sur les tags (ex: v1.0.0)
+  workflow_dispatch:  # Permet un déclenchement manuel
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - os: windows-latest
+            arch: x64
+            compiler: cl.exe
+            ext: .exe
+          - os: windows-latest
+            arch: x86
+            compiler: cl.exe
+            ext: .exe
+          - os: ubuntu-latest
+            arch: x64
+            compiler: gcc
+            ext: 
+          - os: macos-latest
+            arch: x64
+            compiler: clang
+            ext: 
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup environment
+      shell: bash
+      run: |
+        echo "SOURCE_FILE=main.c" >> $GITHUB_ENV
+        echo "OUTPUT_NAME=mon_programme${{ matrix.ext }}" >> $GITHUB_ENV
+        echo "COMPILER=${{ matrix.compiler }}" >> $GITHUB_ENV
+
+    # Installation des dépendances spécifiques
+    - name: Install dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get update && sudo apt-get install -y gcc-multilib
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: brew install gcc
+
+    # Configuration spéciale pour Windows
+    - name: Setup MSVC (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: ${{ matrix.arch }}
+
+    # Étape de compilation
+    - name: Compile
+      shell: bash
+      run: |
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          "${{ env.COMPILER }}" "${{ env.SOURCE_FILE }}" /Fe:"${{ env.OUTPUT_NAME }}" /link /MACHINE:${{ matrix.arch }}
+        else
+          "${{ env.COMPILER }}" "${{ env.SOURCE_FILE }}" -o "${{ env.OUTPUT_NAME }}" -m${{ matrix.arch }}
+        fi
+
+    # Empaquetage des artefacts
+    - name: Package artifacts
+      shell: bash
+      run: |
+        mkdir release
+        cp "${{ env.OUTPUT_NAME }}" "release/mon_programme_${{ matrix.os }}_${{ matrix.arch }}${{ matrix.ext }}"
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          7z a "release_${{ matrix.os }}_${{ matrix.arch }}.zip" "release/*"
+        else
+          zip -r "release_${{ matrix.os }}_${{ matrix.arch }}.zip" release/*
+        fi
+
+    # Upload des artefacts
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: executable_${{ matrix.os }}_${{ matrix.arch }}
+        path: release_${{ matrix.os }}_${{ matrix.arch }}.zip
+
+    # Création d'une release GitHub
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release_*.zip
+        body: "Build pour ${{ matrix.os }} (${{ matrix.arch }})"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

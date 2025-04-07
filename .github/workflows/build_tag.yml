@@ -1,35 +1,33 @@
-name: Build C Project
+name: Build C with tag v*
 
 on:
   push:
-    tags: v*  # Se déclenche sur les tags (ex: v1.0.0)
-  workflow_dispatch:  # Permet un déclenchement manuel
+    tags: v*
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest,  macos-latest]  #ubuntu-latest,
+        os: [windows-2019, windows-2022, ubuntu-22.04, macos-12]
         include:
-          - os: windows-latest
+          - os: windows-2019
             arch: x64
-            compiler: cl.exe
-            ext: .exe
-          - os: windows-latest
+            suffix: win64.exe
+            compiler: cl
+          - os: windows-2022
             arch: x86
-            compiler: cl.exe
-            ext: .exe
-          - os: ubuntu-latest
+            suffix: win32.exe
+            compiler: cl
+          - os: ubuntu-22.04
             arch: x64
+            suffix: linux64
             compiler: gcc
-            ext: .
-          - os: macos-latest
+          - os: macos-12
             arch: x64
+            suffix: macos64
             compiler: clang
-            ext:  .
 
     runs-on: ${{ matrix.os }}
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -37,62 +35,60 @@ jobs:
     - name: Setup environment
       shell: bash
       run: |
-        echo "SOURCE_FILE=main.c" >> $GITHUB_ENV
-        echo "OUTPUT_NAME=mon_programme${{ matrix.ext }}" >> $GITHUB_ENV
-        echo "COMPILER=${{ matrix.compiler }}" >> $GITHUB_ENV
+        mkdir build
+        echo "PROJECT_NAME=hello_world" >> $GITHUB_ENV
+        echo "EXECUTABLE_NAME=${PROJECT_NAME}_${{ matrix.suffix}}" >> $GITHUB_ENV
 
-    # Installation des dépendances spécifiques
     - name: Install dependencies (Linux)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-22.04'
       run: sudo apt-get update && sudo apt-get install -y gcc-multilib
 
     - name: Install dependencies (macOS)
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-12'
       run: brew install gcc
 
-    # Configuration spéciale pour Windows
-    - name: Setup MSVC (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: ${{ matrix.arch }}
-
-    # Étape de compilation
-    - name: Compile
-      shell: bash
+    - name: Compile Windows (x64)
+      if: matrix.os == 'windows-2019'
+      shell: cmd
       run: |
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          "${{ env.COMPILER }}" "${{ env.SOURCE_FILE }}" /Fe:"${{ env.OUTPUT_NAME }}" /link /MACHINE:${{ matrix.arch }}
-        else
-          "${{ env.COMPILER }}" "${{ env.SOURCE_FILE }}" -o "${{ env.OUTPUT_NAME }}" -m${{ matrix.arch }}
-        fi
+        cl ./main.c /Fe:build/${EXECUTABLE_NAME} /W4 /O2 /MT
 
-    # Empaquetage des artefacts
+    - name: Compile Windows (x86)
+      if: matrix.os == 'windows-2022'
+      shell: cmd
+      run: |
+        set PLATFORM=x86
+        cl ./main.c /Fe:build/${EXECUTABLE_NAME} /W4 /O2 /MT
+
+    - name: Compile Linux
+      if: matrix.os == 'ubuntu-22.04'
+      run: |
+        gcc ./main.c -o build/${EXECUTABLE_NAME} -Wall -O3 -static
+
+    - name: Compile macOS
+      if: matrix.os == 'macos-12'
+      run: |
+        clang ./main.c -o build/${EXECUTABLE_NAME} -Wall -O3
+
     - name: Package artifacts
-      shell: bash
       run: |
-        mkdir release
-        cp "${{ env.OUTPUT_NAME }}" "release/mon_programme_${{ matrix.os }}_${{ matrix.arch }}${{ matrix.ext }}"
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          7z a "release_${{ matrix.os }}_${{ matrix.arch }}.zip" "release/*"
-        else
-          zip -r "release_${{ matrix.os }}_${{ matrix.arch }}.zip" release/*
-        fi
+        cd build
+        zip ${EXECUTABLE_NAME}.zip ${EXECUTABLE_NAME}
+        echo "ASSET_PATH=build/${EXECUTABLE_NAME}.zip" >> $GITHUB_ENV
 
-    # Upload des artefacts
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: executable_${{ matrix.os }}_${{ matrix.arch }}
-        path: release_${{ matrix.os }}_${{ matrix.arch }}.zip
+        name: ${{ env.EXECUTABLE_NAME }}
+        path: ${{ env.ASSET_PATH }}
 
-    # Création d'une release GitHub
-    - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/')
+    - name: Create release
+      if: success() && github.ref_type == 'tag'
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          release_*.zip
+          ${{ env.ASSET_PATH }}
+        tag_name: ${{ github.ref }}
         body: "Build pour ${{ matrix.os }} (${{ matrix.arch }})"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

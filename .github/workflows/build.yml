@@ -13,7 +13,7 @@ jobs:
       run: sudo apt-get install -y gcc
 
     - name: Set up C compiler
-      uses: actions/setup-c@v1
+      uses: actions/setup-c@v1.1.0
       with:
         compiler: gcc
 
@@ -53,13 +53,15 @@ jobs:
       run: choco install mingw  #Execute la commande pour installer MinGW (Minimalist GNU for Windows) via Chocolatey, un gestionnaire de paquets pour Windows. MinGW fournit le compilateur GCC pour Windows.
 
     - name: Build for Windows 64-bit
-      run: C:\tools\mingw64\bin\gcc.exe -o hello-world-windows-64.exe main.c
+      run: |
+           mkdir -p ./dist/win64
+           C:\tools\mingw64\bin\gcc.exe -o ./dist/win64/hello-world-win64.exe main.c
       #Execute la commande GCC pour compiler le fichier main.c et generer un executable nomme hello-world.exe. Le chemin C:\tools\mingw64\bin\gcc.exe est l'emplacement du compilateur GCC installe par MinGW.
     - name: Upload artifact
       uses: actions/upload-artifact@v3  #Utilise l'action actions/upload-artifact (version 2) pour telecharger l'executable genere en tant qu'artifact.
       with:   #Specifie les parametres pour l'action upload-artifact.
         name: hello-world-windows-64
-        path: ./hello-world-windows-64.exe    #Specifie le chemin de l'executable a telecharger en tant qu'artifact.
+        path: ./dist/win64/hello-world-win64.exe    #Specifie le chemin de l'executable a telecharger en tant qu'artifact.
 
   build-windows-32:
     runs-on: windows-latest

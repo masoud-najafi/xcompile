@@ -1,0 +1,73 @@
+name: Build C Program
+
+on: [push, pull_request]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install GCC
+      run: sudo apt-get install -y gcc
+
+    - name: Build for Linux
+      run: gcc -o hello-world main.c
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: hello-world-linux
+        path: ./hello-world
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build for macOS
+      run: gcc -o hello-world main.c
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: hello-world-macos
+        path: ./hello-world
+
+  build-windows-64:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install GCC
+      run: choco install mingw
+
+    - name: Build for Windows 64-bit
+      run: C:\tools\mingw64\bin\gcc.exe -o hello-world.exe main.c
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: hello-world-windows-64
+        path: ./hello-world.exe
+
+  build-windows-32:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install GCC
+      run: choco install mingw
+
+    - name: Build for Windows 32-bit
+      run: C:\tools\mingw32\bin\gcc.exe -o hello-world.exe main.c
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: hello-world-windows-32
+        path: ./hello-world.exe

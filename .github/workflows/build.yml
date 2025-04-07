@@ -13,13 +13,13 @@ jobs:
       run: sudo apt-get install -y gcc
 
     - name: Build for Linux
-      run: gcc -o hello-world main.c
+      run: gcc -o hello-world-linux-64 main.c
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: hello-world-linux
-        path: ./hello-world
+        name: hello-world-linux-64
+        path: ./hello-world-linux-64
 
   build-macos:
     runs-on: macos-latest
@@ -28,31 +28,31 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build for macOS
-      run: gcc -o hello-world main.c
+      run: gcc -o hello-world-macos-64 main.c
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: hello-world-macos
-        path: ./hello-world
+        name: hello-world-macos-64
+        path: ./hello-world-macos-64
 
-  build-windows-64:
-    runs-on: windows-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+  build-windows-64:  #Definit un job nomme build-windows-64.
+    runs-on: windows-latest  #Specifie que ce job doit s'executer sur une machine virtuelle Windows avec la derniere version disponible.
+    steps:                     #Debute la liste des etapes a executer dans ce job.
+    - name: Checkout code     #Donne un nom a cette etape : "Checkout code".
+      uses: actions/checkout@v2   #Utilise l'action actions/checkout (version 2) pour verifier le code du depot. Cela clone le depot dans la machine virtuelle.
 
     - name: Install GCC
-      run: choco install mingw
+      run: choco install mingw  #Execute la commande pour installer MinGW (Minimalist GNU for Windows) via Chocolatey, un gestionnaire de paquets pour Windows. MinGW fournit le compilateur GCC pour Windows.
 
     - name: Build for Windows 64-bit
-      run: C:\tools\mingw64\bin\gcc.exe -o hello-world.exe main.c
-
+      run: C:\tools\mingw64\bin\gcc.exe -o hello-world-windows-64.exe main.c
+      #Execute la commande GCC pour compiler le fichier main.c et generer un executable nomme hello-world.exe. Le chemin C:\tools\mingw64\bin\gcc.exe est l'emplacement du compilateur GCC installe par MinGW.
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
-      with:
+      uses: actions/upload-artifact@v3  #Utilise l'action actions/upload-artifact (version 2) pour telecharger l'executable genere en tant qu'artifact.
+      with:   #Specifie les parametres pour l'action upload-artifact.
         name: hello-world-windows-64
-        path: ./hello-world.exe
+        path: ./hello-world-windows-64.exe    #Specifie le chemin de l'executable a telecharger en tant qu'artifact.
 
   build-windows-32:
     runs-on: windows-latest
@@ -64,10 +64,10 @@ jobs:
       run: choco install mingw
 
     - name: Build for Windows 32-bit
-      run: C:\tools\mingw32\bin\gcc.exe -o hello-world.exe main.c
+      run: C:\tools\mingw32\bin\gcc.exe -o hello-world-windows-32.exe main.c
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: hello-world-windows-32
-        path: ./hello-world.exe
+        name: hello-world-windows-32-windows-32
+        path: ./hello-world-windows-32.exe

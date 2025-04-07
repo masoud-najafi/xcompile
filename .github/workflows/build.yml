@@ -12,14 +12,21 @@ jobs:
     - name: Install GCC
       run: sudo apt-get install -y gcc
 
+    - name: Set up C compiler
+      uses: actions/setup-c@v1
+      with:
+        compiler: gcc
+
     - name: Build for Linux
-      run: gcc -o hello-world-linux-64 main.c
+      run: |
+           mkdir -p ./dist/linux64
+           gcc -o mkdir -p ./dist/linux64/hello-world-linux4 ./main.c
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: hello-world-linux-64
-        path: ./hello-world-linux-64
+        name: hello-world-linux64
+        path: ./dist/linux64/hello-world-linux64
 
   build-macos:
     runs-on: macos-latest

@@ -1,0 +1,23 @@
+FROM gcc:latest
+
+RUN echo stage_1
+# Install necessary packages
+RUN echo stage_2
+# Set the working directory
+WORKDIR /app
+RUN echo stage_3
+COPY main.c .
+RUN echo stage_4
+# Compile the C file
+RUN gcc -o hello main.c
+RUN echo stage_5
+RUN gcc -shared -fPIC -o libhellolibrary.so main.c
+RUN echo stage_6
+
+##open powerShell
+## cd d:/ttx/xcompile
+## docker build -f DockerfileForGcc -t myhello_gcc_builder .  #Build the image:
+## docker create --name temp myhello_gcc_builder  # Create a container
+## docker cp temp:/app/hello .                     #extract the created  file 
+## docker cp temp:/app/libhellolibrary.so .
+## docker rm temp

@@ -1,0 +1,11 @@
+FROM ubuntu:latest
+RUN apt-get update && apt-get install -y  build-essential  gcc-arm-linux-gnueabi  # this for linux ARM architecrure xcompiling
+WORKDIR /app
+COPY main.c .
+RUN arm-linux-gnueabi-gcc -o helloArm main.c
+
+# docker build  -f DockerfileForArm -t mylibrary-builderarm .
+# docker create --name temp mylibrary-builderarm
+# docker cp temp:/app/helloArm .
+# docker rm temp
+

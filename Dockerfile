@@ -3,7 +3,6 @@ FROM ubuntu:latest
 RUN echo stage_1
 # Install necessary packages
 RUN apt-get update && apt-get install -y  build-essential 
-#RUN apt-get update && apt-get install -y  build-essential  gcc-arm-linux-gnueabi  # this for linux ARM architecrure xcompiling
 RUN echo stage_2
 
 
@@ -21,7 +20,6 @@ RUN echo stage_5
 
 RUN gcc  -o hello2 main.c
 RUN gcc -shared -fPIC -o libhello2library.so main.c
-#RUN arm-linux-gnueabi-gcc -o hello main.c
 RUN echo stage_6
 
 

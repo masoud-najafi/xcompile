@@ -40,8 +40,8 @@ docker rm tempx
 
 ```
 
-
-# Cross-compiling using WSL installation
+# WSL
+## Install first Ubuntu  or any other Linux on Windows
 
 in powersell:
 ```bash
@@ -50,20 +50,19 @@ winget --install ubuntu  #or winget --install --distribution ubuntu-1.2.3
 wsl --list --verbose
 ```
 
-
-#open an ubuntu shell
+## Once Ubuntu installed, open an ubuntu shell
 ```bash
 uname -a
 lsb_release -a 
 sudo apt update
 sudo apt upgrade -y
-#for cmake
+#for cmake instalation you can do
 sudo apt-get update
 sudo apt-get install apt-transport-https ca-certificates gnupg software-properties-common wget
 wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
 sudo apt-get install cmake
 cmake --version
-
+# for cross-compilation:
 #compile your file and obtain the *.so as usual in Linux
 
 ```
